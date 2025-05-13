@@ -5,11 +5,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 )
 
-const EXT_TERRAFORM = "tf"
+const EXT_TERRAFORM = ".tf"
 
-// retrieves all terraform files in directory (marked by ".tf" extension)
+// retrieves the full path all terraform files in directory (marked by ".tf" extension)
 func GetAllTerraformFilesInDirectory(dir string) ([]string, error) {
 	stats, err := os.Stat(dir)
 	if err != nil {
@@ -29,6 +30,7 @@ func GetAllTerraformFilesInDirectory(dir string) ([]string, error) {
 			ret = append(ret, path.Join(dir, entry.Name()))
 		}
 	}
+	slices.Sort(ret)
 
 	return ret, nil
 }

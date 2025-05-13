@@ -1,17 +1,22 @@
 package file
 
 import (
-	"path/filepath"
+	"path"
 	"reflect"
 	"testing"
 
 	"mikesarfaty.com/tuf/internal/testutils"
 )
 
+func defaultArgMutator(dir string, name string) string {
+	return path.Join(dir, name)
+}
+
 func TestGenerateMd5ForFiles(t *testing.T) {
 	type args struct {
-		contents map[string]string
-		names    []string
+		contents   map[string]string
+		names      []string
+		argMutator func(dir string, name string) string
 	}
 	tests := []struct {
 		name    string
@@ -25,7 +30,8 @@ func TestGenerateMd5ForFiles(t *testing.T) {
 				contents: map[string]string{
 					"hi.txt": "foo",
 				},
-				names: []string{"hi.txt"},
+				names:      []string{"hi.txt"},
+				argMutator: defaultArgMutator,
 			},
 			want: map[string]string{
 				"hi.txt": "acbd18db4cc2f85cedef654fccc4a4d8",
@@ -33,17 +39,64 @@ func TestGenerateMd5ForFiles(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "works with one file",
+			name: "returns nothing if not checking a listed file",
 			args: args{
 				contents: map[string]string{
 					"hi.txt": "foo",
 				},
-				names: []string{"hi.txt"},
+				names:      []string{},
+				argMutator: defaultArgMutator,
+			},
+			want:    map[string]string{},
+			wantErr: false,
+		},
+		{
+			name: "works with many files",
+			args: args{
+				contents: map[string]string{
+					"hi.txt":      "foo",
+					"goodbye.txt": "foobar",
+					"hi.tf":       "different",
+				},
+				names:      []string{"hi.txt", "hi.tf"},
+				argMutator: defaultArgMutator,
 			},
 			want: map[string]string{
 				"hi.txt": "acbd18db4cc2f85cedef654fccc4a4d8",
+				"hi.tf":  "29e4b66fa8076de4d7a26c727b8dbdfa",
 			},
 			wantErr: false,
+		},
+		{
+			name: "errors if trying to check a non-existent file",
+			args: args{
+				contents: map[string]string{
+					"hi.txt": "foo",
+				},
+				names:      []string{"goodbye.txt"},
+				argMutator: defaultArgMutator,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "errors if one of the attempted md5'd files is a dir",
+			args: args{
+				contents: map[string]string{
+					"hi.txt":  "foo",
+					"bye.txt": "foo",
+				},
+				names: []string{"goodbye.txt"},
+				argMutator: func(d string, n string) string {
+					if n == "hi.txt" {
+						return d
+					} else {
+						return path.Join(d, n)
+					}
+				},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -54,7 +107,15 @@ func TestGenerateMd5ForFiles(t *testing.T) {
 			})
 			paths := []string{}
 			for _, fname := range tt.args.names {
-				paths = append(paths, filepath.Join(dir, fname))
+				paths = append(paths, tt.args.argMutator(dir, fname))
+			}
+
+			if tt.want != nil {
+				wantWithPaths := map[string]string{}
+				for k, v := range tt.want {
+					wantWithPaths[path.Join(dir, k)] = v
+				}
+				tt.want = wantWithPaths
 			}
 
 			got, err := GenerateMd5ForFiles(paths)

@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/google/go-cmp v0.6.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.23.0
 	go.uber.org/zap v1.27.0
 )

@@ -15,10 +15,13 @@ type TempDirOpts struct {
 // Makes a temp directory with whatever options and returns its name
 func MakeDirectory(t *testing.T, tdo *TempDirOpts) string {
 	ret := t.TempDir()
+	if tdo == nil {
+		tdo = &TempDirOpts{}
+	}
 
 	for name, contents := range tdo.Contents {
 		func() {
-			file, err := os.OpenFile(filepath.Join(ret, name), os.O_CREATE, 0644)
+			file, err := os.OpenFile(filepath.Join(ret, name), os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				t.Fatalf("failed to create file %s: %v", name, err)
 			}

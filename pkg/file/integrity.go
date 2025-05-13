@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 )
 
-// generates an md5 checksum for multiple files and returns them as a key/val pairing
+// generates an md5 checksum for multiple files and returns them as fullPath: md5 mappings
 func GenerateMd5ForFiles(paths []string) (map[string]string, error) {
 
 	ret := map[string]string{}
@@ -28,15 +27,14 @@ func GenerateMd5ForFiles(paths []string) (map[string]string, error) {
 		}
 
 		hasher := md5.New()
-		bytes, err := io.Copy(hasher, file)
+		_, err = io.Copy(hasher, file)
 		if err != nil {
 			file.Close()
 			return nil, fmt.Errorf("failed to copy file in md5 hasher: %w", err)
 		}
-		fmt.Printf("wrote %d bytes", bytes)
 
 		file.Close()
-		ret[filepath.Base(path)] = hex.EncodeToString(hasher.Sum(nil))
+		ret[path] = hex.EncodeToString(hasher.Sum(nil))
 	}
 
 	return ret, nil
