@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+bin/
 
 # Test binary, build output
 *.test
@@ -11,6 +12,7 @@
 
 # Output of the go coverage tool
 *.coverprofile
+coverage.out
 
 # Dependency directories (if using vendoring or modules)
 vendor/
@@ -33,3 +35,5 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
+# tuf-specific files
+tuf.state
