@@ -1,56 +1,70 @@
 # tuf
 
-`tuf` is the Terraform Un-F*ck tool (or, the Terraform Unweaver Framework)
+The "Terraform Un-F*ck Tool" or "Terraform Unweaver Framework" is a tool designed to simplify the migration of resources and modules between Terraform workspaces. It aims to make these migrations as seamless and configuration-free as possible.
 
-`tuf` makes the act of splitting traditional terraform workspaces simple. 
+`tuf` can:
+- Move actual HCL (HashiCorp Configuration Language) blocks.
+- Remediate resource and module outputs that are used in moved blocks by hardcoding their values from the original workspace in those modules.
+- Handle Terraform state remediation.
 
-`tuf` will:
+# Key Opinions
 
-- move HCL blocks (resources, modules, etc) from a workspace to existing or new workspaces
-- remediate the state between the two workspaces
-- hard-code references to module or resource outputs that existed in the source workspace, but not in the new workspace
+To minimize configuration requirements, `tuf` operates with a set of predefined opinions:
 
-In general, `tuf` is a framework to split up Terraform workspaces *as fast as possible* while needing near-zero intervention.
+### Comment Relevancy and HCL Block "Prettiness"
+When moving resources or modules, `tuf` retains comments directly associated with the moved blocks.
 
-# Opinions
+### Data Block Portability
+Data blocks are automatically copied when deemed necessary for the migration.
 
-to make life as easy as possible, `tuf` exists with a pretty thorough list of opinions. Some of these opinions are listed below.
-
-**Opinion: Comment relevancy + the "prettiness" of removed HCL blocks**
-
-The default (and only) behavior is to bring along comments that are immediately connected to module/resource calls when moving them.
-
-**Opinion: Data Block Portability**
-
-Data blocks are automatically brought-along (in copy mode) when moving blocks between workspaces when they are deemed necessary.
-
-**Opinion: Provider Same-ness**
-It's (temporarily) implicitly assumed that provider blocks with *the same* aliases are completely interoperable.
+### Provider Same-ness
+It is (temporarily) assumed that provider blocks with the same aliases are fully interoperable.
 
 # Disclaimer
 
-`tuf` is in pre-release; use with caution. Opinions and functionality may change at any time.
+`tuf` is currently in pre-release. Use it with caution, as opinions and functionality may change without notice.
 
-# How it Works
-`tuf` acts in three stages: `init`, `move`, `finalize`.
+# Examples
 
-During the initialization phase, `tuf` will verify all connected workspaces and store potentially relevant values and metadata in a local database. 
+### Initialize a Terraform Migration
+```
+tuf init --workspace /path/to/workspace/a \
+  --workspace /path/to/workspace/b \
+  --terraform-state-pull-command='AWS_PROFILE="PRODUCTION"; terraform state pull > terraform.tfstate' \
+  --terraform-state-file-name=terraform.tfstate
+```
 
-This is done to ease (1) the size of the state files that may need to be loaded into memory during the finalize step, and (2) to keep track of multiple workspaces and dedupe common module and resource names. Ie- what is the behavior of moving a resource that uses the output `module.foo.bar`, if `module.foo.bar` is also a valid value in the destination workspace?
+### Move Resources and Modules Between Workspaces
+```
+tuf mv /path/to/workspace/a:module.example /path/to/workspace/b:module.example
+tuf mv /path/to/workspace/b:aws_security_group.foo /path/to/workspace/b:aws_security_group.bar
+```
 
-During the `move` phase, `tuf` works solely with the local workspaces and tracks all operations within the local migration database.
+### Finalize the Migration
+```
+tuf finalize
+```
 
-During the `finalize` phase, `tuf` will remediate all move operations according to the information stored in the db. This includes updating all related state files, replacing references to no-longer-existing outputs with their hardcoded values, fixing resource addresses that are duplicated as a result of the move (first, by attempting to append `_tuf`, then by appending a series of random characters) and doing one final verification that all initial resources and modules are accounted for in the final state.
+# Installation
 
-`tuf` will *not* use a terraform/open tofu binary to run state commands by default. It will attempt to determine the version of the state file and use one of many implementations for that particular state file. The trade-off here is the speed in which you can move resources and modules vs. maintainability. Since there are not many APIs that hook into state, and the local migration database provides an abstract layer, for now this is an acceptable trade-off.
+Install `tuf` using the following command:
 
-# Pre-release Checklist:
-- [ ] `tuf init`
+```
+go install github.com/msarfaty/tuf@latest
+```
+
+Ensure your Go binary directory is included in your system's `PATH`.
+
+# Pre-release Checklist
+
+- [x] `tuf init`
 - [ ] `tuf move`
-  - [x] file manipulation
-  - [ ] move tracking
+  - [x] File manipulation
+  - [ ] Move tracking
 - [ ] `tuf finalize`
+  - [ ] State remediation
+  - [ ] Variable reference updates
 
 # License
 
-MIT
+`tuf` is licensed under the MIT License.
