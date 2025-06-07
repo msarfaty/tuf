@@ -16,13 +16,14 @@ const TUF_STATE_FILE = "tuf.state"
 
 // A WorkspaceMgr keeps track of the tuf migration
 type WorkspaceMgr struct {
-	workspaces []*Workspace `yaml:"workspaces"`
+	Workspaces        []*Workspace       `yaml:"workspaces"`
+	TerraformMetadata *TerraformMetadata `yaml:"terraform"`
 }
 
 // represents this workspacemgr as a string
 func (wsmgr *WorkspaceMgr) String() string {
 	workspaces := []string{}
-	for _, ws := range wsmgr.workspaces {
+	for _, ws := range wsmgr.Workspaces {
 		workspaces = append(workspaces, fmt.Sprintf("%v", ws))
 	}
 
@@ -31,7 +32,6 @@ func (wsmgr *WorkspaceMgr) String() string {
 
 // Add a workspace to the workspaces
 func (wsmgr *WorkspaceMgr) AddWorkspace(path string) error {
-	fmt.Printf("Wsmgr has %d workspaces", len(wsmgr.workspaces))
 	ws := Workspace{}
 
 	abspath, err := filepath.Abs(path)
@@ -45,23 +45,22 @@ func (wsmgr *WorkspaceMgr) AddWorkspace(path string) error {
 	if !stat.IsDir() {
 		return fmt.Errorf("non-directory workspace provided (%s)", abspath)
 	}
-	ws.abspath = abspath
+	ws.Abspath = abspath
 
-	md5s, err := md5ForTerraformFiles(ws.abspath)
+	md5s, err := md5ForTerraformFiles(ws.Abspath)
 	if err != nil {
 		return fmt.Errorf("generating md5 for terraform files: %w", err)
 	}
-	ws.files = []*WorkspaceFile{}
+	ws.Files = []*WorkspaceFile{}
 	for terraformFilePath, md5 := range md5s {
-		ws.files = append(ws.files, &WorkspaceFile{
-			name: filepath.Base(terraformFilePath),
-			md5:  md5,
+		ws.Files = append(ws.Files, &WorkspaceFile{
+			Name: filepath.Base(terraformFilePath),
+			Md5:  md5,
 		})
 	}
 
-	ws.uuid = uuid.NewString()
-	wsmgr.workspaces = append(wsmgr.workspaces, &ws)
-	fmt.Printf("Wsmgr has %d workspaces", len(wsmgr.workspaces))
+	ws.Uuid = uuid.NewString()
+	wsmgr.Workspaces = append(wsmgr.Workspaces, &ws)
 	return nil
 }
 
@@ -69,10 +68,10 @@ func (wsmgr *WorkspaceMgr) AddWorkspace(path string) error {
 func (wss *WorkspaceMgr) Validate() error {
 	errs := []error{}
 
-	for _, ws := range wss.workspaces {
+	for _, ws := range wss.Workspaces {
 		err := ws.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed validation for workspace %s: %w", ws.uuid, err))
+			errs = append(errs, fmt.Errorf("failed validation for workspace %s: %w", ws.Uuid, err))
 		}
 	}
 
@@ -82,7 +81,8 @@ func (wss *WorkspaceMgr) Validate() error {
 // yields a new workspaces object with no workspaces
 func NewWorkspaceMgr() *WorkspaceMgr {
 	return &WorkspaceMgr{
-		workspaces: []*Workspace{},
+		Workspaces:        []*Workspace{},
+		TerraformMetadata: NewTerraformMetadata(),
 	}
 }
 
@@ -101,7 +101,10 @@ func (wsmgr *WorkspaceMgr) WriteToDisk() error {
 		return fmt.Errorf("could not marshal wsmgr to yaml: %v", err)
 	}
 
-	err = os.WriteFile(TUF_STATE_FILE, data, os.FileMode(os.O_CREATE))
+	err = os.WriteFile(TUF_STATE_FILE, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write tuf state to file: %v", err)
+	}
 
 	return nil
 }

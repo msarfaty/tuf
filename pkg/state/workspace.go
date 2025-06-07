@@ -11,22 +11,22 @@ import (
 )
 
 type WorkspaceFile struct {
-	name string `yaml:"name"`
-	md5  string `yaml:"md5"`
+	Name string `yaml:"name"`
+	Md5  string `yaml:"md5"`
 }
 
 type Workspace struct {
-	uuid    string           `yaml:"guid"`
-	abspath string           `yaml:"absolutePath"`
-	files   []*WorkspaceFile `yaml:"files"`
+	Uuid    string           `yaml:"guid"`
+	Abspath string           `yaml:"absolutePath"`
+	Files   []*WorkspaceFile `yaml:"files"`
 }
 
 func (ws *Workspace) String() string {
 	var sb strings.Builder
 	sb.WriteString("Workspace{")
-	sb.WriteString(fmt.Sprintf("uuid=%s abspath=%s", ws.uuid, ws.abspath))
+	sb.WriteString(fmt.Sprintf("uuid=%s abspath=%s", ws.Uuid, ws.Abspath))
 	files := []string{}
-	for _, f := range ws.files {
+	for _, f := range ws.Files {
 		files = append(files, fmt.Sprintf("%v", f))
 	}
 	sb.WriteString(fmt.Sprintf(" files=[%s]", strings.Join(files, ", ")))
@@ -35,27 +35,27 @@ func (ws *Workspace) String() string {
 }
 
 func (wsf *WorkspaceFile) String() string {
-	return fmt.Sprintf("name=%s md5=%s", wsf.name, wsf.md5)
+	return fmt.Sprintf("name=%s md5=%s", wsf.Name, wsf.Md5)
 }
 
 // validates a workspace to ensure that the stored state of the workspace matches the current working state of the workspace
 func (ws *Workspace) Validate() error {
-	actualMd5s, err := md5ForTerraformFiles(ws.abspath)
+	actualMd5s, err := md5ForTerraformFiles(ws.Abspath)
 	if err != nil {
-		return fmt.Errorf("generating md5 for terraform files in %s: %w", ws.abspath, err)
+		return fmt.Errorf("generating md5 for terraform files in %s: %w", ws.Abspath, err)
 	}
 	errs := []error{}
 
-	for _, wsFile := range ws.files {
-		if actualMd5s[path.Join(ws.abspath, wsFile.name)] != wsFile.md5 {
+	for _, wsFile := range ws.Files {
+		if actualMd5s[path.Join(ws.Abspath, wsFile.Name)] != wsFile.Md5 {
 			errs = append(errs, fmt.Errorf("validation failed for %s (stored md5 %s does not match actual md5 %s)",
-				wsFile.name,
-				wsFile.md5,
-				actualMd5s[path.Join(ws.abspath, wsFile.name)]))
+				wsFile.Name,
+				wsFile.Md5,
+				actualMd5s[path.Join(ws.Abspath, wsFile.Name)]))
 		}
 	}
-	if len(ws.files) != len(actualMd5s) {
-		errs = append(errs, fmt.Errorf(": expected %d files but found %d", len(ws.files), len(actualMd5s)))
+	if len(ws.Files) != len(actualMd5s) {
+		errs = append(errs, fmt.Errorf(": expected %d files but found %d", len(ws.Files), len(actualMd5s)))
 	}
 
 	return errors.Join(errs...)

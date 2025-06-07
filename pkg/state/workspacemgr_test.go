@@ -24,10 +24,10 @@ func TestWorkspaceMgr_AddWorkspace(t *testing.T) {
 			args: args{contents: map[string]string{"hi.tf": "foo"}},
 			wantWorkspaces: []*Workspace{
 				{
-					files: []*WorkspaceFile{
+					Files: []*WorkspaceFile{
 						{
-							name: "hi.tf",
-							md5:  "acbd18db4cc2f85cedef654fccc4a4d8",
+							Name: "hi.tf",
+							Md5:  "acbd18db4cc2f85cedef654fccc4a4d8",
 						},
 					},
 				},
@@ -39,14 +39,14 @@ func TestWorkspaceMgr_AddWorkspace(t *testing.T) {
 			args: args{contents: map[string]string{"hi.tf": "foo", "config.tf": "foobarbaz"}},
 			wantWorkspaces: []*Workspace{
 				{
-					files: []*WorkspaceFile{
+					Files: []*WorkspaceFile{
 						{
-							name: "hi.tf",
-							md5:  "acbd18db4cc2f85cedef654fccc4a4d8",
+							Name: "hi.tf",
+							Md5:  "acbd18db4cc2f85cedef654fccc4a4d8",
 						},
 						{
-							name: "config.tf",
-							md5:  "6df23dc03f9b54cc38a0fc1483df6e21",
+							Name: "config.tf",
+							Md5:  "6df23dc03f9b54cc38a0fc1483df6e21",
 						},
 					},
 				},
@@ -60,7 +60,7 @@ func TestWorkspaceMgr_AddWorkspace(t *testing.T) {
 				Contents: tt.args.contents,
 			})
 			wantWsmgr := &WorkspaceMgr{
-				workspaces: tt.wantWorkspaces,
+				Workspaces: tt.wantWorkspaces,
 			}
 
 			gotWsmgr := NewWorkspaceMgr()
@@ -68,26 +68,26 @@ func TestWorkspaceMgr_AddWorkspace(t *testing.T) {
 				t.Errorf("WorkspaceMgr.AddWorkspace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if len(wantWsmgr.workspaces) != len(gotWsmgr.workspaces) {
+			if len(wantWsmgr.Workspaces) != len(gotWsmgr.Workspaces) {
 				t.Fatalf("WorkspaceMgr.AddWorkspace() workspaces count mismatch; want = %v, got = %v", wantWsmgr, gotWsmgr)
 			}
 
 			// check workspace files have same md5 hashes
-			for i, gotWs := range gotWsmgr.workspaces {
+			for i, gotWs := range gotWsmgr.Workspaces {
 				wantWs := tt.wantWorkspaces[i]
-				if len(gotWs.uuid) != len(uuid.NewString()) || len(gotWs.uuid) == 0 {
+				if len(gotWs.Uuid) != len(uuid.NewString()) || len(gotWs.Uuid) == 0 {
 					t.Errorf("WorkspaceMgr.AddWorkspace() got malformed uuid for workspace: %v", gotWs)
 				}
-				if gotWs.abspath != dir {
-					t.Errorf("did not set workspace abspath correctly; got %s, want %s", gotWs.abspath, dir)
+				if gotWs.Abspath != dir {
+					t.Errorf("did not set workspace abspath correctly; got %s, want %s", gotWs.Abspath, dir)
 				}
-				gotWs.uuid = ""
-				gotWs.abspath = ""
-				sort.Slice(wantWs.files, func(i, j int) bool {
-					return wantWs.files[i].name < wantWs.files[j].name
+				gotWs.Uuid = ""
+				gotWs.Abspath = ""
+				sort.Slice(wantWs.Files, func(i, j int) bool {
+					return wantWs.Files[i].Name < wantWs.Files[j].Name
 				})
-				sort.Slice(gotWs.files, func(i, j int) bool {
-					return gotWs.files[i].name < gotWs.files[j].name
+				sort.Slice(gotWs.Files, func(i, j int) bool {
+					return gotWs.Files[i].Name < gotWs.Files[j].Name
 				})
 
 				if !reflect.DeepEqual(wantWs, gotWs) {

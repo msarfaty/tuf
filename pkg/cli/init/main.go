@@ -27,7 +27,7 @@ func (o *Options) validate() error {
 }
 
 // initializes a tuf migration using the given options
-func TufInit(o *Options) error {
+func TufInit(o Options) error {
 	err := o.validate()
 	if err != nil {
 		return fmt.Errorf("failed to initialize new tuf migration: %v", err)
@@ -38,6 +38,15 @@ func TufInit(o *Options) error {
 		if err := wsmgr.AddWorkspace(workspacePath); err != nil {
 			return fmt.Errorf("failed to add workspace %s: %v", workspacePath, err)
 		}
+	}
+
+	wsmgr.TerraformMetadata = &state.TerraformMetadata{
+		StatePullCommand: o.TerraformStatePullCommand,
+		StateFileName:    o.StateFileName,
+	}
+
+	if err = wsmgr.WriteToDisk(); err != nil {
+		return err
 	}
 
 	return nil

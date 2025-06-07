@@ -1,9 +1,9 @@
 package state
 
 func lessws(x *Workspace, y *Workspace) bool {
-	return x.abspath < y.abspath
+	return x.Abspath < y.Abspath
 }
 
 func lesswsf(x *WorkspaceFile, y *WorkspaceFile) bool {
-	return x.name < y.name
+	return x.Name < y.Name
 }
