@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"mikesarfaty.com/tuf/internal/testutils"
+	"github.com/msarfaty/tuf/internal/testutils"
 )
 
 func TestGetAllTerraformFilesInDirectory(t *testing.T) {

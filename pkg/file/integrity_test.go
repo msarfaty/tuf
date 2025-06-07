@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"mikesarfaty.com/tuf/internal/testutils"
+	"github.com/msarfaty/tuf/internal/testutils"
 )
 
 func defaultArgMutator(dir string, name string) string {

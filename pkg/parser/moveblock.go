@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/msarfaty/tuf/internal/logging"
+	filestats "github.com/msarfaty/tuf/pkg/file"
 	"go.uber.org/zap"
-	"mikesarfaty.com/tuf/internal/logging"
-	filestats "mikesarfaty.com/tuf/pkg/file"
 )
 
 // the character that preceeds the moved block if file is not empty
